@@ -7,10 +7,11 @@ CREATE TABLE teachers (
 );
 
 CREATE TABLE classes (
+  class_id      SERIAL PRIMARY KEY,
   class_number  INTEGER,
   class_letter  CHAR(1),
   teacher_id    INTEGER NOT NULL REFERENCES teachers (teacher_id),
-  PRIMARY KEY   (class_number, class_letter)
+  UNIQUE (class_number, class_letter)
 );
 
 CREATE TABLE subjects (
@@ -29,22 +30,18 @@ CREATE TABLE students (
   name_first    VARCHAR(100) NOT NULL,
   name_middle   VARCHAR(100),
   name_last     VARCHAR(100) NOT NULL,
-  class_number  INTEGER NOT NULL,
-  class_letter  CHAR(1) NOT NULL,
-  phone         VARCHAR(30),
-  FOREIGN KEY (class_number, class_letter) REFERENCES classes (class_number, class_letter)
+  class_id      INTEGER NOT NULL REFERENCES classes (class_id),
+  phone         VARCHAR(30)
 );
 
 CREATE TABLE schedule (
   schedule_id   SERIAL PRIMARY KEY,
   subject_id    INTEGER NOT NULL REFERENCES subjects (subject_id),
-  class_number  INTEGER NOT NULL,
-  class_letter  CHAR(1) NOT NULL,
+  class_id      INTEGER NOT NULL REFERENCES classes (class_id),
   teacher_id    INTEGER NOT NULL REFERENCES teachers (teacher_id),
   day           SMALLINT NOT NULL CHECK (day >= 0 AND day <= 6), -- 0(Sunday), ... 6(Saturday)
   time_begin    TIME NOT NULL,
-  time_duration INTERVAL NOT NULL,
-  FOREIGN KEY (class_number, class_letter) REFERENCES classes (class_number, class_letter)
+  time_duration INTERVAL NOT NULL
 );
 
 CREATE TABLE marks (
