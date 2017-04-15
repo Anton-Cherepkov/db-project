@@ -8,8 +8,8 @@ CREATE TABLE teachers (
 
 CREATE TABLE classes (
   class_id      SERIAL PRIMARY KEY,
-  class_number  INTEGER,
-  class_letter  CHAR(1),
+  class_number  INTEGER NOT NULL,
+  class_letter  CHAR(1) NOT NULL,
   teacher_id    INTEGER NOT NULL REFERENCES teachers (teacher_id),
   UNIQUE (class_number, class_letter)
 );
