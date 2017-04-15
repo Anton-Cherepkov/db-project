@@ -66,3 +66,9 @@ CREATE TABLE users_students (
   password    VARCHAR(32) NOT NULL, -- md5 hash
   student_id  INTEGER UNIQUE NOT NULL REFERENCES students (student_id)
 );
+
+CREATE TABLE users_admins (
+  user_id     SERIAL PRIMARY KEY,
+  login       VARCHAR(30) UNIQUE NOT NULL,
+  password    VARCHAR(32) NOT NULL, -- md5 hash
+);
