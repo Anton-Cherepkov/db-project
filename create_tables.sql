@@ -70,5 +70,5 @@ CREATE TABLE users_students (
 CREATE TABLE users_admins (
   user_id     SERIAL PRIMARY KEY,
   login       VARCHAR(30) UNIQUE NOT NULL,
-  password    VARCHAR(32) NOT NULL, -- md5 hash
+  password    VARCHAR(32) NOT NULL -- md5 hash
 );
