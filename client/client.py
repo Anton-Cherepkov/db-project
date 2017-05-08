@@ -83,7 +83,7 @@ def main():
     connection = db_connect(load_config())
     cursor = connection.cursor()
     user_config = user_authorize(cursor)
-    print(user_role, user_id, student_id, teacher_id)
+    print(user_config)
 
 if __name__ == "__main__":
     main()
