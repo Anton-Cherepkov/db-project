@@ -32,10 +32,7 @@ def db_connect(db_config):
 
 def db_execute(cursor, query, data=None):
     try:
-        if data is None or not len(data):
-            cursor.execute(query)
-        else:
-            cursor.execute(query, data)
+        cursor.execute(query, data)
     except psycopg2.IntegrityError as e:
         raise e
     except psycopg2.Error as e:
