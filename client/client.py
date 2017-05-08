@@ -30,7 +30,7 @@ def db_connect(db_config):
         exit(2)
 
 
-def db_execute(cursor, query, data=None):
+def db_execute(cursor, query, *data):
     try:
         cursor.execute(query, data)
     except psycopg2.IntegrityError as e:
@@ -56,11 +56,11 @@ def user_authorize(cursor):
     user_password = getpass.getpass('Password: ')
 
     if user_config['user_role'] == 1:
-        db_execute(cursor, 'SELECT user_id, student_id FROM users_students WHERE login = %s AND password = %s;', (user_login, user_password))
+        db_execute(cursor, 'SELECT user_id, student_id FROM users_students WHERE login = %s AND password = %s;', user_login, user_password)
     elif user_config['user_role'] == 2:
-        db_execute(cursor, 'SELECT user_id, teacher_id FROM users_teachers WHERE login = %s AND password = %s;', (user_login, user_password))
+        db_execute(cursor, 'SELECT user_id, teacher_id FROM users_teachers WHERE login = %s AND password = %s;', user_login, user_password)
     elif user_config['user_role'] == 3:
-        db_execute(cursor, 'SELECT user_id FROM users_admins WHERE login = %s AND password = %s;', (user_login, user_password))
+        db_execute(cursor, 'SELECT user_id FROM users_admins WHERE login = %s AND password = %s;', user_login, user_password)
 
     result = cursor.fetchall()
     if not len(result):
