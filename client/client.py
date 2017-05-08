@@ -39,7 +39,7 @@ def db_execute(cursor, query, data = None):
     except psycopg2.IntegrityError as e:
         raise e
     except psycopg2.Error as e:
-        print('execute() failed:', e.pgerror, file=sys.stderr)
+        print('Database failure:', e.pgerror, file=sys.stderr)
         exit(3)
 
 
