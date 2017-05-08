@@ -82,7 +82,7 @@ def user_authorize(cursor):
 def main():
     connection = db_connect(load_config())
     cursor = connection.cursor()
-    user_role, user_id, student_id, teacher_id = user_authorize(cursor)
+    user_config = user_authorize(cursor)
     print(user_role, user_id, student_id, teacher_id)
 
 if __name__ == "__main__":
