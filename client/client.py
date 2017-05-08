@@ -30,7 +30,7 @@ def db_connect(db_config):
         exit(2)
 
 
-def db_execute(cursor, query, data = None):
+def db_execute(cursor, query, data=None):
     try:
         if data is None or not len(data):
             cursor.execute(query)
