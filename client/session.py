@@ -32,7 +32,6 @@ class Session:
             exit(2)
 
     def user_authorize(self):
-
         print('Choose your role:')
         print('1. Student')
         print('2. Teacher')
