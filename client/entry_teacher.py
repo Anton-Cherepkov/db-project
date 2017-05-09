@@ -4,7 +4,7 @@ class Teacher:
     name_middle = 'name_middle'
     name_last = 'name_last'
     phone = 'phone'
-    columns = [teacher_id, name_first, name_middle, name_last, phone]
+    columns = [name_first, name_middle, name_last, phone]
 
     def __init__(self, session, id):
         self.session = session

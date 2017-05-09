@@ -3,7 +3,7 @@ class Class:
     class_number = 'class_number'
     class_letter = 'class_letter'
     teacher_id = 'teacher_id'
-    columns = [class_id, class_number, class_letter, teacher_id]
+    columns = [class_number, class_letter, teacher_id]
 
     def __init__(self, session, id):
         self.session = session
