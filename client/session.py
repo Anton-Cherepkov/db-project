@@ -53,7 +53,7 @@ class Session:
             self.db_execute('SELECT user_id FROM users_admins WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
 
         result = self.cursor.fetchall()
-        if not len(result):
+        if not result:
             print('Incorrect login or password')
             exit(0)
 
