@@ -43,7 +43,7 @@ class Session:
         self.user_role = int(self.user_role)
 
         user_login = input('Login: ')
-        user_password = getpass.getpass('Password: ')
+        user_password = getpass.getpass('Password: ') # необходимо добавить шифрование
 
         if self.user_role == 1:
             self.db_execute('SELECT user_id, student_id FROM users_students WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
