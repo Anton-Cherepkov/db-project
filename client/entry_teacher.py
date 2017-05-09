@@ -1,5 +1,3 @@
-from psycopg2.extensions import AsIs
-
 class Teacher:
     teacher_id = 'teacher_id'
     name_first = 'name_first'
