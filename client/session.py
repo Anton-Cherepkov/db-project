@@ -78,6 +78,3 @@ class Session:
 
         self.user_role = self.user_id = self.teacher_id = self.student_id = None
         self.user_authorize()
-
-    def __del__(self):
-        self.connection.close()
