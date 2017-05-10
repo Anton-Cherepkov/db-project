@@ -19,12 +19,6 @@ CREATE TABLE subjects (
   name        VARCHAR(100) UNIQUE NOT NULL
 );
 
-CREATE TABLE subjects_teachers (
-  subject_id INTEGER NOT NULL REFERENCES subjects (subject_id),
-  teacher_id INTEGER NOT NULL REFERENCES teachers (teacher_id),
-  CONSTRAINT st UNIQUE (subject_id, teacher_id)
-);
-
 CREATE TABLE students (
   student_id    SERIAL PRIMARY KEY,
   name_first    VARCHAR(100) NOT NULL,
