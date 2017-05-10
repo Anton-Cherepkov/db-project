@@ -64,7 +64,6 @@ class Session:
             self.teacher_id = result[0][1]
 
     def db_execute(self, query, *data):
-        print(data)
         try:
             self.cursor.execute(query, data)
         except psycopg2.IntegrityError as e:
