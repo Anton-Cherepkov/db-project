@@ -9,11 +9,9 @@ from entry_mark import Mark
 def main():
     session = Session()
 
-    subject = Subject(session, 107)
-    print(subject.get(Subject.name))
-    subject.set(Subject.name, 'Русский язык')
+    new_student = Student.add(session, (Student.name_first, 'Никита'), (Student.name_last, 'Геевич'), (Student.class_id, 90))
     session.connection.commit()
-    print(subject.get(Subject.name))
+    print(new_student.id)
 
 if __name__ == "__main__":
     main()
