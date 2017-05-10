@@ -114,37 +114,6 @@ def main():
 
     print('ok')
 
-    cursor.execute('DELETE FROM subjects_teachers')
-    cursor.execute('SELECT * FROM teachers')
-    rows = cursor.fetchall()
-    start_teacher_id = rows[0][0]
-
-    cursor.execute('SELECT * FROM subjects')
-    rows = cursor.fetchall()
-    start_subject_id = rows[0][0]
-
-    ss = set()
-    qs = set()
-
-    for i in range(start_teacher_id, start_teacher_id + 33):
-        cnt = randint(1, 3)
-        st = set()
-        iter = 0
-        while iter < cnt:
-            pos = randint(start_subject_id, start_subject_id + 14)
-            if pos in st:
-                continue
-            else:
-                st.add(pos)
-                ss.add(pos)
-                iter += 1
-                s = "INSERT INTO subjects_teachers(subject_id, teacher_id) VALUES ({0}, {1});".format(pos, i)
-                qs.add(s)
-    for el in qs:
-        cursor.execute(el)
-    
-    print('ok')
-
     cursor.execute('DELETE FROM students')
     cursor.execute('SELECT * FROM classes')
     rows = cursor.fetchall()
