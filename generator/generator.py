@@ -69,7 +69,6 @@ def main():
     for i in range(len(subjects)):
         subjects[i] = subjects[i].replace('\n', '')
 
-    cursor.execute('DELETE FROM subjects_teachers')
     cursor.execute('DELETE FROM schedule')
     cursor.execute('DELETE FROM marks')
     cursor.execute('DELETE FROM students')
@@ -137,8 +136,16 @@ def main():
     print('ok')
 
     cursor.execute('DELETE FROM schedule')
-    cursor.execute('SELECT * FROM subjects_teachers')
-    rows_st = cursor.fetchall()
+    #cursor.execute('SELECT * FROM subjects_teachers')
+    cursor.execute('SELECT * FROM subjects')
+    sub_ids = cursor.fetchall()
+    #print(sub_ids)
+    cursor.execute('SELECT * FROM teachers')
+    tec_ids = cursor.fetchall()
+
+    #rows_st = cursor.fetchall()
+    #rows_st = []
+
 
     cursor.execute('SELECT * FROM classes')
     rows = cursor.fetchall()
@@ -150,9 +157,11 @@ def main():
         for class_id in range(start_class_id, start_class_id + 33):
             for lesson in range(randint(5, 7)):
                 time_begin = times[lesson]
-                el = rand_el(rows_st)
-                subject_id = el[0]
-                teacher_id = el[1]
+                #el = rand_el(rows_st)
+                el1 = rand_el(sub_ids)
+                el2 = rand_el(tec_ids)
+                subject_id = el1[0]
+                teacher_id = el2[0]
                 s = "INSERT INTO schedule (subject_id, class_id, teacher_id, day, time_begin, time_duration) VALUES ({0}, {1}, {2}, {3}, '{4}', '{5}');".format(
                     subject_id, class_id, teacher_id, day, time_begin, '40 minutes')
                 cursor.execute(s)
