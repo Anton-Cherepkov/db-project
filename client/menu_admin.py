@@ -108,11 +108,13 @@ def edit_student(session):
           + str(student_class.get(Class.class_letter)))
 
     while True:
+        print(Color.BLUE, end='')
         print('Выберите действие:')
         print('1. Изменить телефон')
         print('2. Изменить класс')
         print('3. Создать аккаунт в системе')
         print('0. Назад')
+        print(Color.RESET, end='')
         option = None
         while option not in ('0', '1', '2', '3'):
             option = input('? ')
@@ -173,6 +175,9 @@ def edit_student(session):
                     session.connection.rollback()
                     continue
                 raise err
+            print(Color.GREEN, end='')
+            print('Аккаунт с логином', login, 'создан')
+            print(Color.RESET, end='')
         session.connection.commit()
 
 
