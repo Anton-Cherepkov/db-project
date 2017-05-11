@@ -140,10 +140,11 @@ def edit_student(session):
         print('1. Изменить телефон')
         print('2. Изменить класс')
         print('3. Создать аккаунт в системе')
+        print('4. Выгнать ученика')
         print('0. Назад')
         print(Color.RESET, end='')
         option = None
-        while option not in ('0', '1', '2', '3'):
+        while option not in ('0', '1', '2', '3', '4'):
             option = input('? ')
         if option is '0':
             return None
@@ -156,6 +157,8 @@ def edit_student(session):
                 print(Color.RESET, end='')
                 continue
             student.set(Student.phone, phone if len(phone) else None)
+            session.connection.commit()
+
         elif option is '2':
             class_id = input('Введите id класса: ')
             try:
@@ -176,6 +179,8 @@ def edit_student(session):
                     session.connection.rollback()
                     continue
                 raise err
+            session.connection.commit()
+
         elif option is '3':
             login = input('Введите логин нового аккаунта: ')
             password = Session.encrypt_password(input('Введите пароль нового аккаунта: '))
@@ -202,10 +207,20 @@ def edit_student(session):
                     session.connection.rollback()
                     continue
                 raise err
+
+            session.connection.commit()
             print(Color.GREEN, end='')
             print('Аккаунт с логином', login, 'создан')
             print(Color.RESET, end='')
-        session.connection.commit()
+
+        elif option is '4':
+            session.db_execute('DELETE FROM users_students WHERE student_id = %s;', student.id)
+            session.db_execute('DELETE FROM students WHERE student_id = %s;', student.id)
+            session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Ученик изгнан')
+            print(Color.RESET, end='')
+            return None
 
 
 def create_student(session):
@@ -275,7 +290,6 @@ def show_teachers(session):
         if row[2]:
             print(str(row[2]), end=' ')
         print(str(row[3]))
-
 
 
 # Управление классами
