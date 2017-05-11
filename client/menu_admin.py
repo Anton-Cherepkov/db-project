@@ -79,6 +79,8 @@ def menu_control_teachers(session):
 
         if option is '1':
             show_teachers(session)
+        elif option is '2':
+            edit_teacher(session)
         elif option is '3':
             create_teacher(session)
 
@@ -289,6 +291,101 @@ def show_teachers(session):
         if row[2]:
             print(str(row[2]), end=' ')
         print(str(row[3]))
+
+
+def edit_teacher(session):
+    print(Color.BLUE, end='')
+    print('### Редактирование учителя ###')
+    print(Color.RESET, end='')
+
+    teacher_id = input('Введите id учителя: ')
+    try:
+        teacher_id = int(teacher_id)
+    except ValueError:
+        print(Color.RED, end='')
+        print('Ожидалось число')
+        print(Color.RESET, end='')
+        return None
+
+    session.db_execute('SELECT teacher_id FROM teachers WHERE teacher_id = %s;', teacher_id)
+    if not session.cursor.fetchall():
+        print(Color.RED, end='')
+        print('Учитель с id ' + str(teacher_id) + ' не существует')
+        print(Color.RESET, end='')
+        return None
+
+    teacher = Teacher(session, teacher_id)
+    print('Фамилия:', str(teacher.get(Teacher.name_last)))
+    print('Имя:', str(teacher.get(Teacher.name_first)))
+    name_middle = teacher.get(Teacher.name_middle)
+    print('Отчество:', str(name_middle) if name_middle else '')
+    phone = teacher.get(Teacher.phone)
+    print('Телефон:', str(phone) if phone else '')
+
+    while True:
+        print(Color.BLUE, end='')
+        print('Выберите действие:')
+        print('1. Изменить телефон')
+        print('2. Создать аккаунт в системе')
+        print('3. Уволить учителя')
+        print('0. Назад')
+        print(Color.RESET, end='')
+        option = None
+        while option not in ('0', '1', '2', '3', '4'):
+            option = input('? ')
+        if option is '0':
+            return None
+
+        if option is '1':
+            phone = input('Новый телефон: ')
+            if len(phone) > 30:
+                print(Color.RED, end='')
+                print('Длина телефона не может быть более 30 символов')
+                print(Color.RESET, end='')
+                continue
+            teacher.set(Teacher.phone, phone if len(phone) else None)
+            session.connection.commit()
+
+        elif option is '2':
+            login = input('Введите логин нового аккаунта: ')
+            password = Session.encrypt_password(input('Введите пароль нового аккаунта: '))
+            if not password or not login:
+                print(Color.RED, end='')
+                print('Пароль/логин не могут быть пустыми')
+                print(Color.RESET, end='')
+                continue
+            try:
+                session.db_execute(
+                    'INSERT INTO users_teachers (login, password, teacher_id) VALUES (%s, %s, %s)', login, password, teacher.id)
+            except psycopg2.IntegrityError as err:
+                if err.pgcode == '23505': # unique_violation
+                    if err.diag.constraint_name == 'users_teachers_teacher_id_key':
+                        print(Color.RED, end='')
+                        print('У данного учителя уже существует аккаунт')
+                        print(Color.RESET, end='')
+                    elif err.diag.constraint_name == 'users_teachers_login_key':
+                        print(Color.RED, end='')
+                        print('Этот логин уже занят')
+                        print(Color.RESET, end='')
+                    else:
+                        raise err
+                    session.connection.rollback()
+                    continue
+                raise err
+
+            session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Аккаунт с логином', login, 'создан')
+            print(Color.RESET, end='')
+
+        elif option is '3':
+            session.db_execute('DELETE FROM users_teachers WHERE teacher_id = %s;', teacher.id)
+            session.db_execute('DELETE FROM teachers WHERE teacher_id = %s;', teacher.id)
+            session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Учитель уволен')
+            print(Color.RESET, end='')
+            return None
 
 
 def create_teacher(session):
