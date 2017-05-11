@@ -5,12 +5,6 @@ import psycopg2
 import psycopg2.extensions
 
 
-# Админское меню
-# 1. Управление учениками
-#
-# 2. Управление классами
-# 3. Управление расписанием (?)
-# 4. Выход
 def menu_admin(session):
     assert session.user_role is Role.ADMINISTRATOR, 'Role check failed'
 
@@ -50,12 +44,14 @@ def menu_control_students(session):
             show_students(session)
         elif option is '2':
             edit_student(session)
+        elif option is '3':
+            create_student(session)
 
 
 def show_students(session):
     print('### Список учеников ###')
 
-    session.db_execute('SELECT student_id, name_first, name_middle, name_last, class_id FROM students')
+    session.db_execute('SELECT student_id, name_first, name_middle, name_last, class_id FROM students;')
     result = session.cursor.fetchall()
     for row in result:
         print('[id: ' + str(row[0]) + ']', end=' ')
@@ -77,7 +73,7 @@ def edit_student(session):
         print('Ожидалось число')
         return None
 
-    session.db_execute('SELECT student_id FROM students WHERE student_id = %s', student_id)
+    session.db_execute('SELECT student_id FROM students WHERE student_id = %s;', student_id)
     if not session.cursor.fetchall():
         print('Ученик с id ' + str(student_id) + ' не существует')
         return None
@@ -137,7 +133,7 @@ def edit_student(session):
                 session.db_execute(
                     'INSERT INTO users_students (login, password, student_id) VALUES (%s, %s, %s)', login, password, student.id)
             except psycopg2.IntegrityError as err:
-                if err.pgcode == '23505':
+                if err.pgcode == '23505': # unique_violation
                     if err.diag.constraint_name == 'users_students_student_id_key':
                         print('У данного ученика уже существует аккаунт')
                     elif err.diag.constraint_name == 'users_students_login_key':
@@ -148,6 +144,48 @@ def edit_student(session):
                     continue
                 raise err
         session.connection.commit()
+
+
+def create_student(session):
+    print('### Добавление ученика ###')
+
+    name_last = input('Фамилия: ')
+    if not name_last:
+        print('Фамилия не может быть пустой')
+        return None
+
+    name_first = input('Имя: ')
+    if not name_first:
+        print('Имя не может быть пустым')
+        return None
+
+    name_middle = input('Отчество: ')
+    if not name_middle:
+        name_middle = None
+
+    phone = input('Телефон: ')
+    if not phone:
+        phone = None
+
+    class_id = input('id класса: ')
+    try:
+        class_id = int(class_id)
+    except ValueError:
+        print('Ожидалось число')
+
+    student = None
+    try:
+        student = Student.add(session, (Student.name_first, name_first), (Student.name_last, name_last), (Student.name_middle, name_middle),
+                (Student.phone, phone), (Student.class_id, class_id))
+    except psycopg2.IntegrityError as err:
+        if err.pgcode == '23503':
+            print('Класс с id ' + str(class_id) + ' не существует')
+            session.connection.rollback()
+            return None
+        raise err
+
+    print('Ученик добавлен, id', student.id)
+
 
 # Управление классами
 # 1. Список классов
