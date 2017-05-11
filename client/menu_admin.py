@@ -32,6 +32,8 @@ def menu_admin(session):
 
         if option is '1':
             menu_control_students(session)
+        elif option is '2':
+            menu_control_teachers(session)
 
 
 def menu_control_students(session):
@@ -58,6 +60,31 @@ def menu_control_students(session):
             create_student(session)
 
 
+def menu_control_teachers(session):
+    while True:
+        print(Color.BLUE, end='')
+        print('### Управление учителями ###')
+        print('1. Список учителей')
+        print('2. Редактировать учителя')
+        print('3. Добавить учителя')
+        print('0. Назад')
+        print(Color.RESET, end='')
+
+        option = None
+        while option not in ('0', '1', '2', '3'):
+            option = input('? ')
+        if option is '0':
+            break
+
+        if option is '1':
+            show_teachers(session)
+        '''elif option is '2':
+            edit_teacher(session)
+        elif option is '3':
+            create_teacher(session)'''
+
+
+# students
 def show_students(session):
     print(Color.BLUE, end='')
     print('### Список учеников ###')
@@ -232,6 +259,23 @@ def create_student(session):
     print(Color.GREEN, end='')
     print('Ученик добавлен, id', student.id)
     print(Color.RESET, end='')
+
+
+# teachers
+def show_teachers(session):
+    print(Color.BLUE, end='')
+    print('### Список учителей ###')
+    print(Color.RESET, end='')
+
+    session.db_execute('SELECT teacher_id, name_first, name_middle, name_last FROM teachers;')
+    result = session.cursor.fetchall()
+    for row in result:
+        print('[id: ' + str(row[0]) + ']', end=' ')
+        print(str(row[1]), end=' ')
+        if row[2]:
+            print(str(row[2]), end=' ')
+        print(str(row[3]))
+
 
 
 # Управление классами
