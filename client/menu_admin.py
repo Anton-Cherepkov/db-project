@@ -158,7 +158,11 @@ def edit_student(session):
                 print(Color.RESET, end='')
                 continue
             student.set(Student.phone, phone if len(phone) else None)
+
             session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Телефон изменён')
+            print(Color.RESET, end='')
 
         elif option is '2':
             class_id = input('Введите id класса: ')
@@ -180,7 +184,11 @@ def edit_student(session):
                     session.connection.rollback()
                     continue
                 raise err
+
             session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Класс изменен')
+            print(Color.RESET, end='')
 
         elif option is '3':
             login = input('Введите логин нового аккаунта: ')
@@ -217,6 +225,7 @@ def edit_student(session):
         elif option is '4':
             session.db_execute('DELETE FROM users_students WHERE student_id = %s;', student.id)
             session.db_execute('DELETE FROM students WHERE student_id = %s;', student.id)
+
             session.connection.commit()
             print(Color.GREEN, end='')
             print('Ученик изгнан')
@@ -344,7 +353,11 @@ def edit_teacher(session):
                 print(Color.RESET, end='')
                 continue
             teacher.set(Teacher.phone, phone if len(phone) else None)
+
             session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Телефон изменён')
+            print(Color.RESET, end='')
 
         elif option is '2':
             login = input('Введите логин нового аккаунта: ')
@@ -381,6 +394,7 @@ def edit_teacher(session):
         elif option is '3':
             session.db_execute('DELETE FROM users_teachers WHERE teacher_id = %s;', teacher.id)
             session.db_execute('DELETE FROM teachers WHERE teacher_id = %s;', teacher.id)
+
             session.connection.commit()
             print(Color.GREEN, end='')
             print('Учитель уволен')
