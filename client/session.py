@@ -7,6 +7,8 @@ from enum import Enum
 from entry_teacher import Teacher
 from entry_student import Student
 
+from colors import Color
+
 
 class Role(Enum):
     STUDENT = 1
@@ -51,12 +53,18 @@ class Session:
             print('Connection to database failed', file=sys.stderr)
             exit(2)
 
+    @staticmethod
+    def encrypt_password(password):
+        return password
+
     def user_authorize(self):
+        print(Color.BLUE, end='')
         print('Выберите роль:')
         print('1. Ученик')
         print('2. Учитель')
         print('3. Администратор')
         print('0. Выход')
+        print(Color.RESET, end='')
 
         self.user_role = None
         while self.user_role not in ('0', '1', '2', '3'):
@@ -67,7 +75,7 @@ class Session:
         self.user_role = Role.get_role(self.user_role)
 
         user_login = input('Логин: ')
-        user_password = getpass.getpass('Пароль: ') # необходимо добавить шифрование
+        user_password = Session.encrypt_password(getpass.getpass('Пароль: ')) # необходимо добавить шифрование
 
         if self.user_role is Role.STUDENT:
             self.db_execute('SELECT user_id, student_id FROM users_students WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
@@ -78,7 +86,9 @@ class Session:
 
         result = self.cursor.fetchall()
         if not result:
+            print(Color.RED, end='')
             print('Неправильная пара логин/пароль')
+            print(Color.RESET, end='')
             exit(0)
 
         self.user_id = result[0][0]
@@ -99,6 +109,7 @@ class Session:
             exit(3)
 
     def hello_message(self):
+        print(Color.CYAN, end='')
         if self.user_role is Role.ADMINISTRATOR:
             print('Добро пожаловать')
 
@@ -111,8 +122,10 @@ class Session:
             student = Student(self, self.student_id)
             print('Добро пожаловать, ', end='')
             print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+        print(Color.RESET, end='')
 
     def bye_message(self):
+        print(Color.CYAN, end='')
         if self.user_role is Role.ADMINISTRATOR:
             print('До свидания')
 
@@ -125,6 +138,7 @@ class Session:
             student = Student(self, self.student_id)
             print('До свидания, ', end='')
             print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+        print(Color.RESET, end='')
 
     def __init__(self):
         self.connection = self.cursor = None
