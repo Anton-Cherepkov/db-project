@@ -200,7 +200,8 @@ def edit_student(session):
                 continue
             try:
                 session.db_execute(
-                    'INSERT INTO users_students (login, password, student_id) VALUES (%s, %s, %s)', login, password, student.id)
+                    'INSERT INTO users_students (login, password, student_id) VALUES (%s, %s, %s);',
+                    login, password, student.id)
             except psycopg2.IntegrityError as err:
                 if err.pgcode == '23505': # unique_violation
                     if err.diag.constraint_name == 'users_students_student_id_key':
@@ -369,7 +370,8 @@ def edit_teacher(session):
                 continue
             try:
                 session.db_execute(
-                    'INSERT INTO users_teachers (login, password, teacher_id) VALUES (%s, %s, %s)', login, password, teacher.id)
+                    'INSERT INTO users_teachers (login, password, teacher_id) VALUES (%s, %s, %s);',
+                    login, password, teacher.id)
             except psycopg2.IntegrityError as err:
                 if err.pgcode == '23505': # unique_violation
                     if err.diag.constraint_name == 'users_teachers_teacher_id_key':
@@ -392,8 +394,17 @@ def edit_teacher(session):
             print(Color.RESET, end='')
 
         elif option is '3':
-            session.db_execute('DELETE FROM users_teachers WHERE teacher_id = %s;', teacher.id)
-            session.db_execute('DELETE FROM teachers WHERE teacher_id = %s;', teacher.id)
+            try:
+                session.db_execute('DELETE FROM users_teachers WHERE teacher_id = %s;', teacher.id)
+                session.db_execute('DELETE FROM teachers WHERE teacher_id = %s;', teacher.id)
+            except psycopg2.IntegrityError as err:
+                if err.pgcode == '23503':
+                    print(Color.RED, end='')
+                    print('Удаление невозможно: учитель до сих пор является классным руководителем')
+                    print(Color.RESET, end='')
+                    session.connection.rollback()
+                    continue
+                raise err
 
             session.connection.commit()
             print(Color.GREEN, end='')
@@ -435,10 +446,3 @@ def create_teacher(session):
     print(Color.GREEN, end='')
     print('Учитель добавлен, id', teacher.id)
     print(Color.RESET, end='')
-
-
-# Управление классами
-# 1. Список классов
-# 2. Посмотреть класс
-# 3. Изменить классного классного руководителя
-# 4. Создать класс
