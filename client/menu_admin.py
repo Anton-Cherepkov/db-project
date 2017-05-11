@@ -1,5 +1,6 @@
 from session import Session, Role
 from entry_student import Student
+from entry_teacher import Teacher
 from entry_class import Class
 
 import psycopg2
@@ -78,10 +79,8 @@ def menu_control_teachers(session):
 
         if option is '1':
             show_teachers(session)
-        '''elif option is '2':
-            edit_teacher(session)
         elif option is '3':
-            create_teacher(session)'''
+            create_teacher(session)
 
 
 # students
@@ -290,6 +289,41 @@ def show_teachers(session):
         if row[2]:
             print(str(row[2]), end=' ')
         print(str(row[3]))
+
+
+def create_teacher(session):
+    print(Color.BLUE, end='')
+    print('### Добавление учителя ###')
+    print(Color.RESET, end='')
+
+    name_last = input('Фамилия: ')
+    if not name_last:
+        print(Color.RED, end='')
+        print('Фамилия не может быть пустой')
+        print(Color.RESET, end='')
+        return None
+
+    name_first = input('Имя: ')
+    if not name_first:
+        print(Color.RED, end='')
+        print('Имя не может быть пустым')
+        print(Color.RESET, end='')
+        return None
+
+    name_middle = input('Отчество: ')
+    if not name_middle:
+        name_middle = None
+
+    phone = input('Телефон: ')
+    if not phone:
+        phone = None
+
+    teacher = Teacher.add(session, (Teacher.name_first, name_first), (Teacher.name_last, name_last),
+                              (Teacher.name_middle, name_middle), (Teacher.phone, phone))
+
+    print(Color.GREEN, end='')
+    print('Учитель добавлен, id', teacher.id)
+    print(Color.RESET, end='')
 
 
 # Управление классами
