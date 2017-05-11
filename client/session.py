@@ -3,6 +3,26 @@ import configparser
 import getpass
 import hashlib
 import sys
+from enum import Enum
+from entry_teacher import Teacher
+from entry_student import Student
+
+
+class Role(Enum):
+    STUDENT = 1
+    TEACHER = 2
+    ADMINISTRATOR = 3
+
+    @staticmethod
+    def get_role(role):
+        role = str(role)
+        assert role in ('1', '2', '3'), 'Unknown role'
+
+        if role is '1':
+            return Role.STUDENT
+        if role is '2':
+            return Role.TEACHER
+        return Role.ADMINISTRATOR
 
 
 class Session:
@@ -36,20 +56,24 @@ class Session:
         print('1. Ученик')
         print('2. Учитель')
         print('3. Администратор')
+        print('0. Выход')
 
         self.user_role = None
-        while self.user_role not in ('1', '2', '3'):
+        while self.user_role not in ('0', '1', '2', '3'):
             self.user_role = input('? ')
-        self.user_role = int(self.user_role)
+
+        if self.user_role is '0':
+            exit(0)
+        self.user_role = Role.get_role(self.user_role)
 
         user_login = input('Логин: ')
         user_password = getpass.getpass('Пароль: ') # необходимо добавить шифрование
 
-        if self.user_role == 1:
+        if self.user_role is Role.STUDENT:
             self.db_execute('SELECT user_id, student_id FROM users_students WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
-        elif self.user_role == 2:
+        elif self.user_role is Role.TEACHER:
             self.db_execute('SELECT user_id, teacher_id FROM users_teachers WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
-        elif self.user_role == 3:
+        elif self.user_role is Role.ADMINISTRATOR:
             self.db_execute('SELECT user_id FROM users_admins WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
 
         result = self.cursor.fetchall()
@@ -58,10 +82,12 @@ class Session:
             exit(0)
 
         self.user_id = result[0][0]
-        if self.user_role == 1:
+        if self.user_role is Role.STUDENT:
             self.student_id = result[0][1]
-        elif self.user_role == 2:
+        elif self.user_role is Role.TEACHER:
             self.teacher_id = result[0][1]
+
+        self.hello_message()
 
     def db_execute(self, query, *data):
         try:
@@ -72,9 +98,40 @@ class Session:
             print('Database failure:', e.pgerror, file=sys.stderr)
             exit(3)
 
+    def hello_message(self):
+        if self.user_role is Role.ADMINISTRATOR:
+            print('Добро пожаловать')
+
+        if self.user_role is Role.TEACHER:
+            teacher = Teacher(self, self.teacher_id)
+            print('Добро пожаловать, ', end='')
+            print(' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)))
+
+        if self.user_role is Role.STUDENT:
+            student = Student(self, self.student_id)
+            print('Добро пожаловать, ', end='')
+            print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+
+    def bye_message(self):
+        if self.user_role is Role.ADMINISTRATOR:
+            print('До свидания')
+
+        if self.user_role is Role.TEACHER:
+            teacher = Teacher(self, self.teacher_id)
+            print('До свидания, ', end='')
+            print(' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)))
+
+        if self.user_role is Role.STUDENT:
+            student = Student(self, self.student_id)
+            print('До свидания, ', end='')
+            print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+
     def __init__(self):
         self.connection = self.cursor = None
         self.db_connect()
 
         self.user_role = self.user_id = self.teacher_id = self.student_id = None
         self.user_authorize()
+
+    def __del__(self):
+        self.bye_message()
