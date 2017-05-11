@@ -1,20 +1,28 @@
 from session import Session, Role
 from entry_student import Student
 from entry_class import Class
+
 import psycopg2
 import psycopg2.extensions
+
+from enum import Enum
+from termcolor import colored
+
+from colors import Color
 
 
 def menu_admin(session):
     assert session.user_role is Role.ADMINISTRATOR, 'Role check failed'
 
     while True:
+        print(Color.BLUE, end='')
         print('### Меню администратора ###')
         print('1. Управление учениками')
         print('2. Управление учителями')
         print('3. Управление классами')
         print('4. Управление расписанием')
         print('0. Выход')
+        print(Color.RESET, end='')
 
         option = None
         while option not in ('0', '1', '2', '3', '4'):
@@ -28,11 +36,13 @@ def menu_admin(session):
 
 def menu_control_students(session):
     while True:
+        print(Color.BLUE, end='')
         print('### Управление учениками ###')
         print('1. Список учеников')
         print('2. Редактировать ученика')
         print('3. Добавить ученика')
         print('0. Назад')
+        print(Color.RESET, end='')
 
         option = None
         while option not in ('0', '1', '2', '3'):
@@ -49,7 +59,9 @@ def menu_control_students(session):
 
 
 def show_students(session):
+    print(Color.BLUE, end='')
     print('### Список учеников ###')
+    print(Color.RESET, end='')
 
     session.db_execute('SELECT student_id, name_first, name_middle, name_last, class_id FROM students;')
     result = session.cursor.fetchall()
@@ -64,25 +76,31 @@ def show_students(session):
 
 
 def edit_student(session):
+    print(Color.BLUE, end='')
     print('### Редактирование ученика ###')
+    print(Color.RESET, end='')
 
     student_id = input('Введите id ученика: ')
     try:
         student_id = int(student_id)
     except ValueError:
+        print(Color.RED, end='')
         print('Ожидалось число')
+        print(Color.RESET, end='')
         return None
 
     session.db_execute('SELECT student_id FROM students WHERE student_id = %s;', student_id)
     if not session.cursor.fetchall():
+        print(Color.RED, end='')
         print('Ученик с id ' + str(student_id) + ' не существует')
+        print(Color.RESET, end='')
         return None
 
     student = Student(session, student_id)
     print('Фамилия:', str(student.get(Student.name_last)))
     print('Имя:', str(student.get(Student.name_first)))
     name_middle = student.get(Student.name_middle)
-    print('Отчество:', str(name_middle) if name_middle else 'netu)')
+    print('Отчество:', str(name_middle) if name_middle else '')
     phone = student.get(Student.phone)
     print('Телефон:', str(phone) if phone else '')
     student_class = Class(session, int(student.get(Student.class_id)))
@@ -104,7 +122,9 @@ def edit_student(session):
         if option is '1':
             phone = input('Новый телефон: ')
             if len(phone) > 30:
+                print(Color.RED, end='')
                 print('Длина телефона не может быть более 30 символов')
+                print(Color.RESET, end='')
                 continue
             student.set(Student.phone, phone if len(phone) else None)
         elif option is '2':
@@ -112,14 +132,18 @@ def edit_student(session):
             try:
                 class_id = int(class_id)
             except ValueError:
+                print(Color.RED, end='')
                 print('Ожидалось число')
+                print(Color.RESET, end='')
                 continue
 
             try:
                 student.set(Student.class_id, class_id)
             except psycopg2.IntegrityError as err:
                 if err.pgcode == '23503':  # foreign_key_violation
+                    print(Color.RED, end='')
                     print('Класс с id ' + str(class_id) + ' не существует')
+                    print(Color.RESET, end='')
                     session.connection.rollback()
                     continue
                 raise err
@@ -127,7 +151,9 @@ def edit_student(session):
             login = input('Введите логин нового аккаунта: ')
             password = Session.encrypt_password(input('Введите пароль нового аккаунта: '))
             if not password or not login:
-                print('Пароль не может быть пустым')
+                print(Color.RED, end='')
+                print('Пароль/логин не могут быть пустыми')
+                print(Color.RESET, end='')
                 continue
             try:
                 session.db_execute(
@@ -135,9 +161,13 @@ def edit_student(session):
             except psycopg2.IntegrityError as err:
                 if err.pgcode == '23505': # unique_violation
                     if err.diag.constraint_name == 'users_students_student_id_key':
+                        print(Color.RED, end='')
                         print('У данного ученика уже существует аккаунт')
+                        print(Color.RESET, end='')
                     elif err.diag.constraint_name == 'users_students_login_key':
+                        print(Color.RED, end='')
                         print('Этот логин уже занят')
+                        print(Color.RESET, end='')
                     else:
                         raise err
                     session.connection.rollback()
@@ -147,16 +177,22 @@ def edit_student(session):
 
 
 def create_student(session):
+    print(Color.BLUE, end='')
     print('### Добавление ученика ###')
+    print(Color.RESET, end='')
 
     name_last = input('Фамилия: ')
     if not name_last:
+        print(Color.RED, end='')
         print('Фамилия не может быть пустой')
+        print(Color.RESET, end='')
         return None
 
     name_first = input('Имя: ')
     if not name_first:
+        print(Color.RED, end='')
         print('Имя не может быть пустым')
+        print(Color.RESET, end='')
         return None
 
     name_middle = input('Отчество: ')
@@ -171,7 +207,9 @@ def create_student(session):
     try:
         class_id = int(class_id)
     except ValueError:
+        print(Color.RED, end='')
         print('Ожидалось число')
+        print(Color.RESET, end='')
 
     student = None
     try:
@@ -179,12 +217,16 @@ def create_student(session):
                 (Student.phone, phone), (Student.class_id, class_id))
     except psycopg2.IntegrityError as err:
         if err.pgcode == '23503':
+            print(Color.RED, end='')
             print('Класс с id ' + str(class_id) + ' не существует')
+            print(Color.RESET, end='')
             session.connection.rollback()
             return None
         raise err
 
+    print(Color.GREEN, end='')
     print('Ученик добавлен, id', student.id)
+    print(Color.RESET, end='')
 
 
 # Управление классами
