@@ -32,18 +32,18 @@ class Session:
             exit(2)
 
     def user_authorize(self):
-        print('Choose your role:')
-        print('1. Student')
-        print('2. Teacher')
-        print('3. Administrator')
+        print('Выберите роль:')
+        print('1. Ученик')
+        print('2. Учитель')
+        print('3. Администратор')
 
         self.user_role = None
         while self.user_role not in ('1', '2', '3'):
             self.user_role = input('? ')
         self.user_role = int(self.user_role)
 
-        user_login = input('Login: ')
-        user_password = getpass.getpass('Password: ') # необходимо добавить шифрование
+        user_login = input('Логин: ')
+        user_password = getpass.getpass('Пароль: ') # необходимо добавить шифрование
 
         if self.user_role == 1:
             self.db_execute('SELECT user_id, student_id FROM users_students WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
@@ -54,7 +54,7 @@ class Session:
 
         result = self.cursor.fetchall()
         if not result:
-            print('Incorrect login or password')
+            print('Неправильная пара логин/пароль')
             exit(0)
 
         self.user_id = result[0][0]
