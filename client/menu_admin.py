@@ -104,6 +104,8 @@ def menu_control_classes(session):
 
         if option is '1':
             show_classes(session)
+        elif option is '2':
+            edit_class(session)
 
 
 # students
@@ -118,10 +120,11 @@ def show_students(session):
         print('[id: ' + str(row[0]) + ']', end=' ')
         student_class = Class(session, int(row[4]))
         print('[' + str(student_class.get(Class.class_number)) + str(student_class.get(Class.class_letter)) + ']', end=' ')
+        print(str(row[3]), end=' ')
         print(str(row[1]), end=' ')
         if row[2]:
-            print(str(row[2]), end=' ')
-        print(str(row[3]))
+            print(str(row[2]), end='')
+        print('')
 
 
 def edit_student(session):
@@ -318,10 +321,11 @@ def show_teachers(session):
     result = session.cursor.fetchall()
     for row in result:
         print('[id: ' + str(row[0]) + ']', end=' ')
+        print(str(row[3]), end=' ')
         print(str(row[1]), end=' ')
         if row[2]:
-            print(str(row[2]), end=' ')
-        print(str(row[3]))
+            print(str(row[2]),end='')
+        print('')
 
 
 def edit_teacher(session):
@@ -475,8 +479,93 @@ def show_classes(session):
     print('### Список классов ###')
     print(Color.RESET, end='')
 
-    session.db_execute('SELECT class_id, class_number, class_letter FROM classes;')
+    session.db_execute('SELECT class_id , class_number, class_letter FROM classes;')
     result = session.cursor.fetchall()
     for row in result:
         print('[id: ' + str(row[0]) + ']', end=' ')
-        print(str(row[1]) + print(str(row[2])))
+        print(str(row[1]) + str(row[2]))
+
+
+def edit_class(session):
+    print(Color.BLUE, end='')
+    print('### Редактирование класса ###')
+    print(Color.RESET, end='')
+
+    class_id = input('Введите id класса: ')
+    try:
+        class_id = int(class_id)
+    except ValueError:
+        print(Color.RED, end='')
+        print('Ожидалось число')
+        print(Color.RESET, end='')
+        return None
+
+    session.db_execute('SELECT class_id FROM classes WHERE class_id = %s;', class_id)
+    if not session.cursor.fetchall():
+        print(Color.RED, end='')
+        print('Класс с id ' + str(class_id) + ' не существует')
+        print(Color.RESET, end='')
+        return None
+
+    class_current = Class(session, int(class_id))
+    print(str(class_current.get(Class.class_number)) + str(class_current.get(Class.class_letter)))
+    class_teacher = Teacher(session, int(class_current.get(Class.teacher_id)))
+    print('Классный руководитель:', end=' ')
+    print('[id: ' + str(class_teacher.id) + ']', end=' ')
+    print(class_teacher.get(Teacher.name_last), end=' ')
+    print(class_teacher.get(Teacher.name_first), end=' ')
+    class_teacher_name_middle = class_teacher.get(Teacher.name_middle)
+    if class_teacher_name_middle:
+        print(class_teacher_name_middle,end='')
+    print('')
+
+    session.db_execute('SELECT student_id FROM students WHERE class_id = %s;', class_id)
+    student_ids = session.cursor.fetchall()
+    print('Ученики:')
+    for row in student_ids:
+        student = Student(session, int(row[0]))
+        print('[id: ' + str(student.id) + ']', end=' ')
+        print(str(student.get(Student.name_last)), end=' ')
+        print(str(student.get(Student.name_first)), end=' ')
+        name_middle = str(student.get(Student.name_middle))
+        if name_middle:
+            print(name_middle,end='')
+        print('')
+
+    while True:
+        print(Color.BLUE, end='')
+        print('1. Сменить классного руководителя')
+        print('0. Назад')
+        print(Color.RESET, end='')
+
+        option = None
+        while option not in ('0', '1'):
+            option = input('? ')
+        if option is '0':
+            return None
+
+        if option is '1':
+            teacher_id = input('Введите id нового учителя: ')
+            try:
+                teacher_id = int(teacher_id)
+            except ValueError:
+                print(Color.RED, end='')
+                print('Ожидалось число')
+                print(Color.RESET, end='')
+                continue
+
+            try:
+                class_current.set(Class.teacher_id, teacher_id)
+            except psycopg2.IntegrityError as err:
+                if err.pgcode == '23503':
+                    print(Color.RED, end='')
+                    print('Учитель с id ' + str(teacher_id) + ' не существует')
+                    print(Color.RESET, end='')
+                    session.connection.rollback()
+                    continue
+                raise err
+
+            session.connection.commit()
+            print(Color.GREEN, end='')
+            print('Классный руководитель изменён')
+            print(Color.RESET, end='')
