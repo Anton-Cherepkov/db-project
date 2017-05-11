@@ -66,3 +66,6 @@ CREATE TABLE users_admins (
   login       VARCHAR(30) UNIQUE NOT NULL,
   password    VARCHAR(32) NOT NULL -- md5 hash
 );
+
+
+-- TODO: индекс для колонки class_id таблицы students
