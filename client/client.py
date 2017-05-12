@@ -8,7 +8,7 @@ from entry_schedule import Schedule
 from entry_mark import Mark
 
 import menu_admin
-
+import menu_student
 import menu_teacher
 
 
@@ -20,6 +20,8 @@ def main():
     elif session.user_role is Role.TEACHER:
         interactor = menu_teacher.TeacherInteract(session)
         interactor.handler_menu_teacher()
+    elif session.user_role is Role.STUDENT:
+        menu_student.menu_student(session)
 
 if __name__ == "__main__":
     main()
