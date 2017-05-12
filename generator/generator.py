@@ -193,7 +193,7 @@ def main():
     print('ok')
 
     cursor.execute('DELETE FROM users_admins')
-    cursor.execute("INSERT INTO users_admins (login, password) VALUES ('admin', 'admin')")
+    cursor.execute("INSERT INTO users_admins (login, password) VALUES ('admin', 'cacfac443bdf91d0a0dedfe8e5d323076eb7317ae074ef57245478b33538fc3e')")
 
 if __name__ == "__main__":
     main()
