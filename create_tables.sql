@@ -68,4 +68,7 @@ CREATE TABLE users_admins (
 );
 
 
--- TODO: индекс для колонки class_id таблицы students
+CREATE INDEX ON students (class_id);
+CREATE INDEX ON schedule (teacher_id);
+CREATE INDEX ON schedule (class_id);
+CREATE INDEX ON marks (student_id, subject_id);
