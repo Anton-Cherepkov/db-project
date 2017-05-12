@@ -29,7 +29,6 @@ class Student:
 
         columns = ', '.join(list(map(lambda x: x[0], args)))
         values = list(map(lambda x: x[1], args))
-        # INSERT INTO students (dad, huy) VALUES (%s %s), sa, sad
         query = 'INSERT INTO students (' + columns + ') VALUES (' + ('%s, ' * len(args))[:-2:] + ') RETURNING student_id;'
         session.db_execute(query, *values)
 
