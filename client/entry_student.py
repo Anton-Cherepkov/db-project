@@ -23,7 +23,7 @@ class Student:
         self.session.db_execute('UPDATE students SET ' + column + ' = %s WHERE student_id = %s;', value, self.id)
 
     @staticmethod
-    def add(session, *args): #usage: add((Student.name_first, 'Антон'), (Student.name_middle, 'Юрьевич'))
+    def add(session, *args):  # usage: add((Student.name_first, 'Антон'), (Student.name_middle, 'Юрьевич'))
         for arg in args:
             assert arg[0] in Student.columns, 'Unknown column name'
 
