@@ -7,6 +7,7 @@ import psycopg2
 import psycopg2.extensions
 
 from colors import Color
+from utils import encrypt_password
 
 
 def menu_admin(session):
@@ -213,7 +214,7 @@ def edit_student(session):
 
         elif option is '3':
             login = input('Введите логин нового аккаунта: ')
-            password = Session.encrypt_password(input('Введите пароль нового аккаунта: '))
+            password = encrypt_password(input('Введите пароль нового аккаунта: '))
             if not password or not login:
                 print(Color.RED, end='')
                 print('Пароль/логин не могут быть пустыми')
@@ -384,7 +385,7 @@ def edit_teacher(session):
 
         elif option is '2':
             login = input('Введите логин нового аккаунта: ')
-            password = Session.encrypt_password(input('Введите пароль нового аккаунта: '))
+            password = encrypt_password(input('Введите пароль нового аккаунта: '))
             if not password or not login:
                 print(Color.RED, end='')
                 print('Пароль/логин не могут быть пустыми')

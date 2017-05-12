@@ -1,6 +1,11 @@
 from colors import Color
 
 import calendar
+import hashlib
+
+
+def encrypt_password(password):
+    return hashlib.sha256(password.encode() + b'25cdab54f934222f7699a29cfb6caf4a').hexdigest()
 
 
 def read_date(message):

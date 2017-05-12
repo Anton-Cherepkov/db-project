@@ -8,7 +8,7 @@ from entry_teacher import Teacher
 from entry_student import Student
 
 from colors import Color
-
+from utils import encrypt_password
 
 class Role(Enum):
     STUDENT = 1
@@ -53,10 +53,6 @@ class Session:
             print('Connection to database failed', file=sys.stderr)
             exit(2)
 
-    @staticmethod
-    def encrypt_password(password):
-        return hashlib.sha256(password.encode() + b'25cdab54f934222f7699a29cfb6caf4a').hexdigest()
-
     def user_authorize(self):
         print(Color.BLUE, end='')
         print('Выберите роль:')
@@ -75,7 +71,7 @@ class Session:
         self.user_role = Role.get_role(self.user_role)
 
         user_login = input('Логин: ')
-        user_password = Session.encrypt_password(getpass.getpass('Пароль: ')) # необходимо добавить шифрование
+        user_password = encrypt_password(getpass.getpass('Пароль: '))
 
         if self.user_role is Role.STUDENT:
             self.db_execute('SELECT user_id, student_id FROM users_students WHERE login = %s AND PASSWORD = %s;', user_login, user_password)
