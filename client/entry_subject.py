@@ -19,7 +19,7 @@ class Subject:
         self.session.db_execute('UPDATE subjects SET ' + column + ' = %s WHERE subject_id = %s;', value, self.id)
 
     @staticmethod
-    def add(session, *args):  # usage: add((Student.name_first, 'Антон'), (Student.name_middle, 'Юрьевич'))
+    def add(session, *args):
         for arg in args:
             assert arg[0] in Subject.columns, 'Unknown column name'
 

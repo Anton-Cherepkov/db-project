@@ -23,7 +23,7 @@ class Mark:
         self.session.db_execute('UPDATE marks SET ' + column + ' = %s WHERE mark_id = %s;', value, self.id)
 
     @staticmethod
-    def add(session, *args):  # usage: add((Student.name_first, 'Антон'), (Student.name_middle, 'Юрьевич'))
+    def add(session, *args):
         for arg in args:
             assert arg[0] in Mark.columns, 'Unknown column name'
 

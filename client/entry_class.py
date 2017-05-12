@@ -21,7 +21,7 @@ class Class:
         self.session.db_execute('UPDATE classes SET ' + column + ' = %s WHERE class_id = %s;', value, self.id)
 
     @staticmethod
-    def add(session, *args):  # usage: add((Student.name_first, 'Антон'), (Student.name_middle, 'Юрьевич'))
+    def add(session, *args):
         for arg in args:
             assert arg[0] in Class.columns, 'Unknown column name'
 
