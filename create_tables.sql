@@ -50,21 +50,21 @@ CREATE TABLE marks (
 CREATE TABLE users_teachers (
   user_id     SERIAL PRIMARY KEY,
   login       VARCHAR(30) UNIQUE NOT NULL,
-  password    VARCHAR(32) NOT NULL, -- md5 hash
+  password    VARCHAR(64) NOT NULL, -- md5 hash
   teacher_id  INTEGER UNIQUE NOT NULL REFERENCES teachers (teacher_id)
 );
 
 CREATE TABLE users_students (
   user_id     SERIAL PRIMARY KEY,
   login       VARCHAR(30) UNIQUE NOT NULL,
-  password    VARCHAR(32) NOT NULL, -- md5 hash
+  password    VARCHAR(64) NOT NULL, -- md5 hash
   student_id  INTEGER UNIQUE NOT NULL REFERENCES students (student_id)
 );
 
 CREATE TABLE users_admins (
   user_id     SERIAL PRIMARY KEY,
   login       VARCHAR(30) UNIQUE NOT NULL,
-  password    VARCHAR(32) NOT NULL -- md5 hash
+  password    VARCHAR(64) NOT NULL -- md5 hash
 );
 
 
