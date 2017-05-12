@@ -55,7 +55,7 @@ class Session:
 
     @staticmethod
     def encrypt_password(password):
-        return password
+        return hashlib.sha256(password.encode() + b'25cdab54f934222f7699a29cfb6caf4a').hexdigest()
 
     def user_authorize(self):
         print(Color.BLUE, end='')
