@@ -10,6 +10,7 @@ from entry_student import Student
 from colors import Color
 from utils import encrypt_password
 
+
 class Role(Enum):
     STUDENT = 1
     TEACHER = 2
@@ -86,6 +87,7 @@ class Session:
             print('Неправильная пара логин/пароль')
             print(Color.RESET, end='')
             exit(0)
+        self.authorization_success = True
 
         self.user_id = result[0][0]
         if self.user_role is Role.STUDENT:
@@ -105,42 +107,43 @@ class Session:
             exit(3)
 
     def hello_message(self):
+        if not self.authorization_success:
+            return None
+
         print(Color.CYAN, end='')
-        if self.user_role is Role.ADMINISTRATOR:
-            print('Добро пожаловать')
+        print('Добро пожаловать', end='')
 
         if self.user_role is Role.TEACHER:
             teacher = Teacher(self, self.teacher_id)
-            print('Добро пожаловать, ', end='')
-            print(' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)))
-
-        if self.user_role is Role.STUDENT:
+            print(',', ' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)), end='')
+        elif self.user_role is Role.STUDENT:
             student = Student(self, self.student_id)
-            print('Добро пожаловать, ', end='')
-            print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+            print(',', ' '.join((student.get(Student.name_first), student.get(Student.name_last),)), end='')
         print(Color.RESET, end='')
+        print('')
 
     def bye_message(self):
+        if not self.authorization_success:
+            return None
+
         print(Color.CYAN, end='')
-        if self.user_role is Role.ADMINISTRATOR:
-            print('До свидания')
+        print('До свидания', end='')
 
         if self.user_role is Role.TEACHER:
             teacher = Teacher(self, self.teacher_id)
-            print('До свидания, ', end='')
-            print(' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)))
-
-        if self.user_role is Role.STUDENT:
+            print(',', ' '.join((teacher.get(Teacher.name_first), teacher.get(Teacher.name_last),)), end='')
+        elif self.user_role is Role.STUDENT:
             student = Student(self, self.student_id)
-            print('До свидания, ', end='')
-            print(' '.join((student.get(Student.name_first), student.get(Student.name_last),)))
+            print(',', ' '.join((student.get(Student.name_first), student.get(Student.name_last),)), end='')
         print(Color.RESET, end='')
+        print('')
 
     def __init__(self):
         self.connection = self.cursor = None
         self.db_connect()
 
         self.user_role = self.user_id = self.teacher_id = self.student_id = None
+        self.authorization_success = False
         self.user_authorize()
 
     def __del__(self):
