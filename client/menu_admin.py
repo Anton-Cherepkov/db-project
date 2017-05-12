@@ -6,9 +6,6 @@ from entry_class import Class
 import psycopg2
 import psycopg2.extensions
 
-from enum import Enum
-from termcolor import colored
-
 from colors import Color
 
 
