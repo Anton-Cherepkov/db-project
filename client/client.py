@@ -9,12 +9,17 @@ from entry_mark import Mark
 
 import menu_admin
 
+import menu_teacher
+
 
 def main():
     session = Session()
 
     if session.user_role is Role.ADMINISTRATOR:
         menu_admin.menu_admin(session)
+    elif session.user_role is Role.TEACHER:
+        interactor = menu_teacher.TeacherInteract(session)
+        interactor.handler_menu_teacher()
 
 if __name__ == "__main__":
     main()
