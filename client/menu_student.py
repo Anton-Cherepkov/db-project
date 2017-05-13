@@ -69,20 +69,18 @@ def menu_my_class(session):
 
         if option is '1':
             session.db_execute(
-                'SELECT student_id FROM students WHERE class_id = %s ORDER BY name_last, name_first, name_middle;',
+                'SELECT name_first, name_last, name_middle, phone '
+                'FROM students WHERE class_id = %s ORDER BY name_last, name_first, name_middle;',
                 my_class.id
             )
             result = session.cursor.fetchall()
-            classmates = list(map(lambda x : Student(session, int(x[0])), result))
-            for classmate in classmates:
-                print(classmate.get(Student.name_last), end=' ')
-                print(classmate.get(Student.name_first), end=' ')
-                classmate_name_middle = classmate.get(Student.name_middle)
-                if classmate_name_middle:
-                    print(classmate_name_middle, end=' ')
-                classmate_phone = classmate.get(Student.phone)
-                if classmate_phone:
-                    print('[' + str(classmate_phone) + ']', end='')
+            for classmate in result:
+                print(str(classmate[0]), end=' ')
+                print(str(classmate[1]), end=' ')
+                if classmate[2]:
+                    print(str(classmate[2]), end=' ')
+                if classmate[3]:
+                    print('[' + str(classmate[3]) + ']', end='')
                 print('')
 
         elif option is '2':
