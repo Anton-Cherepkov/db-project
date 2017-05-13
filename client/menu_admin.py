@@ -521,17 +521,15 @@ def edit_class(session):
         print(class_teacher_name_middle,end='')
     print('')
 
-    session.db_execute('SELECT student_id FROM students WHERE class_id = %s;', class_id)
+    session.db_execute('SELECT student_id, name_first, name_last, name_middle FROM students WHERE class_id = %s;', class_id)
     student_ids = session.cursor.fetchall()
     print('Ученики:')
     for row in student_ids:
-        student = Student(session, int(row[0]))
-        print('[id: ' + str(student.id) + ']', end=' ')
-        print(str(student.get(Student.name_last)), end=' ')
-        print(str(student.get(Student.name_first)), end=' ')
-        name_middle = str(student.get(Student.name_middle))
-        if name_middle:
-            print(name_middle,end='')
+        print('[id: ' + str(row[0]) + ']', end=' ')
+        print(str(row[1]), end=' ')
+        print(str(row[2]), end=' ')
+        if row[3]:
+            print(str(row[3]), end='')
         print('')
 
     while True:
