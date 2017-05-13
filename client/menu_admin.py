@@ -112,16 +112,20 @@ def show_students(session):
     print('### Список учеников ###')
     print(Color.RESET, end='')
 
-    session.db_execute('SELECT student_id, name_first, name_middle, name_last, class_id FROM students;')
+    session.db_execute(
+        'SELECT student_id, class_number, class_letter, name_first, name_last, name_middle '
+        'FROM students '
+        'INNER JOIN classes '
+        'USING (class_id) '
+        'ORDER BY class_number, class_letter;')
     result = session.cursor.fetchall()
     for row in result:
         print('[id: ' + str(row[0]) + ']', end=' ')
-        student_class = Class(session, int(row[4]))
-        print('[' + str(student_class.get(Class.class_number)) + str(student_class.get(Class.class_letter)) + ']', end=' ')
+        print('[' + str(row[1]) + str(row[2]) + ']', end=' ')
         print(str(row[3]), end=' ')
-        print(str(row[1]), end=' ')
-        if row[2]:
-            print(str(row[2]), end='')
+        print(str(row[4]), end=' ')
+        if row[5]:
+            print(str(row[5]), end='')
         print('')
 
 
