@@ -101,15 +101,19 @@ def menu_my_class(session):
 
                 option = int(option) - 1
                 session.db_execute(
-                    'SELECT subject_id, time_begin, time_duration '
-                    'FROM schedule WHERE class_id = %s AND day = %s ORDER BY time_begin;',
+                    'SELECT name, time_begin, time_duration '
+                    'FROM subjects '
+                    'INNER JOIN '
+                    '(SELECT * FROM schedule WHERE class_id = %s AND day = %s) AS subq '
+                    'USING (subject_id) '
+                    'ORDER BY time_begin;',
                     my_class.id, option
                 )
                 result = session.cursor.fetchall()
                 if not result:
                     print('В этот день у Вас нет уроков')
                 for row in result:
-                    subject_name = Subject(session, int(row[0])).get(Subject.name)
+                    subject_name = row[0]
                     time_begin = row[1].strftime('%H:%M')
                     time_end = (datetime.datetime.combine(datetime.date.today(), row[1]) + row[2]).strftime('%H:%M')
                     print(time_begin, '-', time_end, subject_name)
