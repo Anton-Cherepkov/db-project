@@ -5,7 +5,7 @@ from entry_class import Class
 from entry_schedule import Schedule
 from entry_subject import Subject
 from colors import Color
-from utils import read_date, print_wrong_format, print_wrong_format_
+from utils import read_date_returning_parts, print_wrong_format, print_wrong_format_
 
 import datetime
 import calendar
@@ -143,8 +143,13 @@ def menu_my_marks(session):
         'Выберите период, за который хотите узнать оценки.\n' +
         'Введите начальную и конечную дату в формате ГГГГ-ММ-ДД'
     )
-    begin_date = read_date('Введите начальную дату: ')
-    end_date = read_date('Введите конечную дату: ') + ' 23:59:59'
+    begin_date = read_date_returning_parts('Введите начальную дату:')
+    if begin_date == -1:
+        return None
+    end_date = read_date_returning_parts('Введите конечную дату:')
+    if end_date == -1:
+        return None
+    end_date += ' 23:59:59'
 
     session.db_execute(
         'SELECT value, teacher_id, time '
