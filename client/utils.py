@@ -9,32 +9,43 @@ def encrypt_password(password):
 
 
 def read_date(message):
-    while True:
-        date = input(message)
-        date_list = date.split('-')
-        if len(date_list) != 3 or len(date) != 10:
-            print_wrong_format()
-            continue
-        if len(date_list[0]) != 4 or len(date_list[1]) != 2 or len(date_list[2]) != 2:
-            print_wrong_format()
-            continue
-        try:
-            day = int(date_list[2])
-            month = int(date_list[1])
-            year = int(date_list[0])
-        except ValueError:
-            print_wrong_format()
-            continue
-        try:
-            calendar.monthcalendar(year, month)
-        except ValueError:
-            print_wrong_format('Такой даты не существует')
-            continue
-        cnt_days = calendar.monthrange(year, month)[1]
-        if day < 1 or day > cnt_days:
-            print_wrong_format('Такой даты не существует')
-            continue
-        return date
+    # print('\n\n\n\n', type(message), '\n', message, '\n\n\n\n')
+    date = input(message + ' в формате ГГГГ-ММ-ДД ')
+    date_list = date.split('-')
+    if len(date_list) != 3 or len(date) != 10:
+        print_wrong_format()
+        return -1
+    if len(date_list[0]) != 4 or len(date_list[1]) != 2 or len(date_list[2]) != 2:
+        print_wrong_format()
+        return -1
+    try:
+        day = int(date_list[2])
+        month = int(date_list[1])
+        year = int(date_list[0])
+    except ValueError:
+        print_wrong_format()
+        return -1
+    try:
+        calendar.monthcalendar(year, month)
+    except ValueError:
+        print_wrong_format('Такой даты не существует')
+        return -1
+    cnt_days = calendar.monthrange(year, month)[1]
+    if day < 1 or day > cnt_days:
+        print_wrong_format('Такой даты не существует')
+        return -1
+    return date
+
+
+def read_date_returning_parts(message):
+    s = read_date(message)
+    if s == -1:
+        return -1
+    date_list = s.split('-')
+    day = int(date_list[2])
+    month = int(date_list[1])
+    year = int(date_list[0])
+    return s, (day, month, year)
 
 
 def print_wrong_format(message='Неверный формат'):
