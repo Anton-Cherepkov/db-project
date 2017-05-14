@@ -32,11 +32,14 @@
 #
 #
 from session import Session, Role
+from operator import itemgetter
 from entry_student import Student
 from entry_class import Class
 from entry_subject import Subject
 from colors import Color
-from utils import read_date, print_wrong_format, print_wrong_format_
+from utils import read_date, print_wrong_format, print_wrong_format_, read_date_returning_parts
+
+import calendar
 
 import datetime
 
@@ -61,14 +64,15 @@ class TeacherInteract:
             print(Color.BLUE, end='')
             print('### Меню учителя ###')
             print('1. Классное руководство')
-            print('2. Посмотреть список учеников своего класса')
-            print('3. Посмотреть список предметов')
-            print('5. Расписание')
+            # print('2. Посмотреть список учеников своего класса')
+            # print('3. Посмотреть список предметов')
+            print('2. Управление оценками')
+            print('3. Расписание')
             print('0. Выход')
             print(Color.RESET, end='')
 
             option = None
-            while option not in ('0', '1', '2', '3', '4', '5'):
+            while option not in ('0', '1', '2', '3'):
                 option = input('? ')
             if option == '0':
                 break
@@ -76,22 +80,165 @@ class TeacherInteract:
             if option == '1':
                 self.class_management()
             elif option == '2':
-                self.show_students()
+                self.interact_marks()
+                # self.show_students()
             elif option == '3':
-                self.show_subjects()
-            elif option == '5':
                 self.interact_schedule()
 
+    def interact_marks(self):
+        self.session.connection.set_isolation_level(0)
+        while True:
+            print(Color.BLUE, end='')
+            print('### Управление оценками ###')
+            print('1. Добавить оценку')
+            print('2. Удалить оценку')
+            print('3. Просмотреть оценки')
+            print('0. Выход')
+            print(Color.RESET, end='')
+
+            option = None
+            while option not in ('0', '1', '2', '3'):
+                option = input('? ')
+            if option == '0':
+                return
+            if option == '1':
+                self.add_marks()
+            elif option == '2':
+                pass
+            elif option == '3':
+                pass
+
+    def add_marks(self):
+        dates = read_date_returning_parts('Введите дату для выставления оценки')
+        if dates == -1:
+            return
+        day, month, year = dates[1][0], dates[1][1], dates[1][2]
+        week_day = (calendar.weekday(year, month, day) + 1) % 7
+        '''
+          print(self.list_days[day] + ':')
+            self.db_execute(
+                'SELECT name, time_begin, time_duration '
+                'FROM subjects '
+                'INNER JOIN '
+                '(SELECT * FROM schedule WHERE teacher_id = %s AND day = %s) AS subq '
+                'USING (subject_id) '
+                'ORDER BY time_begin;',
+                self.teacher_id, day
+            )
+            result = self.fetchall()
+            if not result:
+                print('В этот день у Вас нет уроков')
+                return
+            for row in result:
+                subject_name = row[0]
+                time_begin = row[1].strftime('%H:%M')
+                time_end = (datetime.datetime.combine(datetime.date.today(), row[1]) + row[2]).strftime('%H:%M')
+                print(time_begin, '-', time_end, subject_name)
+        '''
+        self.db_execute(
+            'SELECT * FROM schedule WHERE teacher_id = %s AND day = %s ORDER BY time_begin;',
+            self.teacher_id, week_day
+        )
+        result = self.fetchall()
+        self.db_execute(
+            'SELECT name, time_begin, time_duration '
+            'FROM subjects '
+            'INNER JOIN '
+            '(SELECT * FROM schedule WHERE teacher_id = %s AND day = %s) AS subq '
+            'USING (subject_id) '
+            'ORDER BY time_begin;',
+            self.teacher_id, week_day
+        )
+        result2 = self.fetchall()
+        if len(result2) == 0:
+            print('В этот день у Вас нет уроков\n')
+            return
+        print('Выберите урок:')
+        num = 1
+        #for row in result:
+        #    cur_sub = Subject(self.session, row[1])
+        #    name_sub = cur_sub.get('name')
+        #    cur_class = Class(self.session, row[2])
+        #    name_class = str(cur_class.get('class_number')) + cur_class.get('class_letter')
+        #    time_begin = row[5].strftime('%H:%M')
+        #    dt = datetime.datetime.combine(datetime.date.today(), row[5]) + row[6]
+        #    print(str(num) + '.', name_sub + ',', name_class, time_begin, '-', dt.time().strftime('%H:%M'))
+        #    num += 1
+        for row in result2:
+            subject_name = row[0]
+            time_begin = row[1].strftime('%H:%M')
+            time_end = (datetime.datetime.combine(datetime.date.today(), row[1]) + row[2]).strftime('%H:%M')
+            print(str(num) + '.', time_begin, '-', time_end, subject_name)
+            num += 1
+        print('0. Назад')
+        nums = []
+        cnt_lessons = len(result)
+        for i in range(cnt_lessons + 1):
+            nums.append(str(i))
+        option = None
+        while option not in nums:
+            option = input('? ')
+        if option == '0':
+            return
+        row = result[int(option) - 1]
+        cur_sub = Subject(self.session, row[1])
+        name_sub = cur_sub.get('name')
+        cur_class = Class(self.session, row[2])
+        name_class = str(cur_class.get('class_number')) + cur_class.get('class_letter')
+        time_begin = row[5].strftime('%H:%M')
+        dt = datetime.datetime.combine(datetime.date.today(), row[5]) + row[6]
+        self.db_execute(
+            'SELECT student_id, name_last, name_first, name_middle FROM students WHERE class_id = %s;',
+            result[int(option) - 1][2]
+        )
+        result = self.fetchall()
+        print('Список учеников', name_class, 'класса')
+        print_result(result)
+        student_id = input('Введите id ученика ')
+        try:
+            student_id = int(student_id)
+        except ValueError:
+            print_wrong_format('Ожидалось число')
+            return
+        flag = 0
+        for el in result:
+            if el[0] == student_id:
+                flag = 1
+                break
+        if flag == 0:
+            print_wrong_format('Неверный id')
+            return
+        mark_value = input('Введите оценку от 2 до 5 ')
+        try:
+            mark_value = int(mark_value)
+        except ValueError:
+            print_wrong_format('Ожидалось число')
+            return
+        if mark_value < 2 or mark_value > 5:
+            print_wrong_format('Неверное значение')
+            return
+        self.db_execute(
+            "INSERT INTO marks (value, teacher_id, student_id, subject_id, time) VALUES (%s, %s, %s, %s, %s) RETURNING mark_id;",
+            mark_value, self.teacher_id, student_id, cur_sub.id, datetime.datetime(year, month, day, row[5].hour, row[5].minute)
+        )
+        result = self.fetchall()
+        print('Оценка добавлена [id:', str(result[0][0]) + ']')
+
     def class_management(self):
+        if self.my_class_id == -1:
+            print('Вы не являетесь классным руководителем')
+            return
         while True:
             print(Color.BLUE, end='')
             print('### Классное руководство ###')
             print('1. Посмотреть оценки ученика')
             print('2. Посмотреть оценки по предмету')
+            print('3. Посмотреть список учеников своего класса')
+            print('4. Посмотреть список предметов')
             print('0. Назад')
             print(Color.RESET, end='')
             option = None
-            while option not in ('0', '1', '2'):
+            while option not in ('0', '1', '2', '3', '4'):
                 option = input('? ')
             if option == '0':
                 break
@@ -99,6 +246,10 @@ class TeacherInteract:
                 self.show_marks_of_student()
             elif option == '2':
                 self.show_marks_for_subject()
+            elif option == '3':
+                self.show_students()
+            elif option == '4':
+                self.show_subjects()
 
     def show_marks(self, table, id_kind, id_val):
         if id_kind == 'subject_id':
@@ -117,21 +268,22 @@ class TeacherInteract:
             if option == '0':
                 return
             if option == '2':
-                print(
-                    'Выберите период, за который хотите узнать оценки.\n' +
-                    'Вводите начальную и конечную дату в формате ГГГГ-ММ-ДД'
-                )
+                print('Выберите период, за который хотите узнать оценки.')
                 begin_date = read_date('Введите начальную дату: ')
+                if begin_date == -1:
+                    return
                 end_date = read_date('Введите конечную дату: ') + ' 23:59:59'
+                if end_date == -1:
+                    return
             if option == '2':
                 s = "SELECT * from marks WHERE {0} = {1} AND time >= '{2}' AND time <= '{3}' ORDER BY {4}, time;".format(
-                        id_kind, id_val, begin_date, end_date, another_id_kind)
+                    id_kind, id_val, begin_date, end_date, another_id_kind)
                 self.db_execute(
-                   s
+                    s
                 )
             else:
                 s = 'SELECT * from marks WHERE {0} = {1} ORDER BY {2}, time;'.format(
-                        id_kind, id_val, another_id_kind)
+                    id_kind, id_val, another_id_kind)
                 self.db_execute(
                     s
                 )
@@ -178,11 +330,15 @@ class TeacherInteract:
 
     def show_marks_for_subject(self):
         subject_id = self.read_id('предмета')
+        if subject_id == -1:
+            return
         # print('opa12')
         self.show_marks('subjects', 'subject_id', subject_id)
 
     def show_marks_of_student(self):
         student_id = self.read_id('ученика')
+        if student_id == -1:
+            return
         self.show_marks('students', 'student_id', student_id)
 
     def read_id(self, obj):
@@ -194,7 +350,7 @@ class TeacherInteract:
                 print(Color.RED, end='')
                 print('Ожидалось число')
                 print(Color.RESET, end='')
-                continue
+                return -1
             # print('opa11')
             if obj == 'ученика':
                 # print('opa10')
@@ -212,55 +368,55 @@ class TeacherInteract:
             assert len(result) <= 1, 'чета много объектов с одним id(('
             if len(result) == 0:
                 print_wrong_format('Неверный id')
-                continue
+                return -1
             if obj == 'ученика':
                 if result[0][0] != self.my_class_id:
                     print(Color.RED, end='')
                     print('Ученик учится не в Вашем классе')
                     print(Color.RESET, end='')
-                    continue
+                    return -1
             return obj_id
 
     def interact_schedule(self):
         while True:
             print(Color.BLUE, end='')
             print('### Узнать расписание ###')
-            for i in range(1, 8):
-                print(i, '. ', self.list_days[i], sep='')
+            for i in range(0, 8):
+                print(i + 1, '. ', self.list_days[i], sep='')
             print('0. Назад')
             print(Color.RESET, end='')
             option = None
-            while option not in ('0', '1', '2', '3', '4', '5', '6', '7'):
+            while option not in ('0', '1', '2', '3', '4', '5', '6', '7', '8'):
                 option = input('? ')
             if option == '0':
                 break
-            self.show_schedule(int(option))
+            self.show_schedule(int(option) - 1)
 
     def show_schedule(self, day):
         if day == 7:
-            for i in range(1, 7):
+            for i in range(0, 7):
                 self.show_schedule(i)
         else:
             print(self.list_days[day] + ':')
             self.db_execute(
-                'SELECT * FROM schedule WHERE teacher_id = %s AND day = %s ORDER BY time_begin',
+                'SELECT name, time_begin, time_duration '
+                'FROM subjects '
+                'INNER JOIN '
+                '(SELECT * FROM schedule WHERE teacher_id = %s AND day = %s) AS subq '
+                'USING (subject_id) '
+                'ORDER BY time_begin;',
                 self.teacher_id, day
             )
             result = self.fetchall()
-            if len(result) == 0:
-                print('В этот день у Вас нет уроков\n')
+            if not result:
+                print('В этот день у Вас нет уроков')
                 return
-            num = 1
             for row in result:
-                cur_sub = Subject(self.session, row[1])
-                name_sub = cur_sub.get('name')
-                cur_class = Class(self.session, row[2])
-                name_class = str(cur_class.get('class_number')) + cur_class.get('class_letter')
-                time_begin = row[5].strftime('%H:%M')
-                dt = datetime.datetime.combine(datetime.date.today(), row[5]) + row[6]
-                print(str(num) + '.', name_sub + ',', name_class, time_begin, '-', dt.time().strftime('%H:%M'))
-                num += 1
-            print()
+                subject_name = row[0]
+                time_begin = row[1].strftime('%H:%M')
+                time_end = (datetime.datetime.combine(datetime.date.today(), row[1]) + row[2]).strftime('%H:%M')
+                print(time_begin, '-', time_end, subject_name)
+        return 1
 
     def get_ids_students(self):
         self.db_execute(
@@ -296,7 +452,9 @@ class TeacherInteract:
             self.teacher_id
         )
         result = self.fetchall()
-        assert len(result) == 1, 'чета много класснух у одного класса((('
+        assert len(result) <= 1, 'чета много класснух у одного класса((('
+        if len(result) == 0:
+            return ''
         return str(result[0][0]) + result[0][1]
 
     def class_id(self):
@@ -305,7 +463,9 @@ class TeacherInteract:
             self.teacher_id
         )
         result = self.fetchall()
-        assert len(result) == 1, 'чета много класснух у одного класса((('
+        assert len(result) <= 1, 'чета много класснух у одного класса((('
+        if len(result) == 0:
+            return -1
         return result[0][0]
 
 
