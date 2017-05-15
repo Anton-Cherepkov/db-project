@@ -49,7 +49,7 @@ def menu_my_class(session):
 
         print('Классный руководитель:', end=' ')
         print(str(class_teacher.get(Teacher.name_last)), end=' ')
-        print(str(class_teacher.get(Teacher.name_last)), end=' ')
+        print(str(class_teacher.get(Teacher.name_first)), end=' ')
         if name_middle:
             print(str(name_middle), end=' ')
         if teacher_phone:
