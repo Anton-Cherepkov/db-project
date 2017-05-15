@@ -71,7 +71,7 @@ class TeacherInteract:
             print(Color.RESET, end='')
 
             option = None
-            while option not in ('0', '1', '2', '3'):
+            while option not in ('0', '1', '2'):
                 option = input('? ')
             if option == '0':
                 return
@@ -79,8 +79,6 @@ class TeacherInteract:
                 self.add_marks()
             elif option == '2':
                 self.change_and_show_marks()
-            elif option == '3':
-                pass
 
     def change_and_show_marks(self):
         print('Выберите класс:')
@@ -106,7 +104,6 @@ class TeacherInteract:
         if option == '0':
             return
         class_id = all_classes[int(option) - 1][0]
-        # print(class_id)
         self.db_execute(
             'SELECT subject_id FROM schedule WHERE teacher_id = %s AND class_id = %s;',
             self.teacher_id, class_id
@@ -127,7 +124,6 @@ class TeacherInteract:
         if option == '0':
             return
         subject_id = all_subs[int(option) - 1][0]
-        # print(subject_id)
         print('Выберите ученика: ')
         self.db_execute(
             'SELECT * FROM students WHERE class_id = %s;',
@@ -168,12 +164,10 @@ class TeacherInteract:
             return
         option = int(option)
         mark_id = all_marks[option-1][0]
-        # print(mark_id)
         print('Введите новое значение оценки. \nВведите 0 чтобы удалить оценку.')
         option = None
         while option not in ('0', '2', '3', '4', '5'):
             option = input('? ')
-            # print('>', option, '<')
         if option == '0':
             self.db_execute(
                 'DELETE FROM marks WHERE mark_id = %s',
@@ -183,7 +177,6 @@ class TeacherInteract:
             return
         option = int(option)
         my_mark = Mark(self.session, mark_id)
-        # print('opa')
         my_mark.set('value', option)
         print('Оценка изменена, новая оценка:')
         self.db_execute(
@@ -203,27 +196,6 @@ class TeacherInteract:
             return
         day, month, year = dates[1][0], dates[1][1], dates[1][2]
         week_day = (calendar.weekday(year, month, day) + 1) % 7
-        '''
-          print(self.list_days[day] + ':')
-            self.db_execute(
-                'SELECT name, time_begin, time_duration '
-                'FROM subjects '
-                'INNER JOIN '
-                '(SELECT * FROM schedule WHERE teacher_id = %s AND day = %s) AS subq '
-                'USING (subject_id) '
-                'ORDER BY time_begin;',
-                self.teacher_id, day
-            )
-            result = self.fetchall()
-            if not result:
-                print('В этот день у Вас нет уроков')
-                return
-            for row in result:
-                subject_name = row[0]
-                time_begin = row[1].strftime('%H:%M')
-                time_end = (datetime.datetime.combine(datetime.date.today(), row[1]) + row[2]).strftime('%H:%M')
-                print(time_begin, '-', time_end, subject_name)
-        '''
         self.db_execute(
             'SELECT * FROM schedule WHERE teacher_id = %s AND day = %s ORDER BY time_begin;',
             self.teacher_id, week_day
@@ -244,15 +216,6 @@ class TeacherInteract:
             return
         print('Выберите урок:')
         num = 1
-        #for row in result:
-        #    cur_sub = Subject(self.session, row[1])
-        #    name_sub = cur_sub.get('name')
-        #    cur_class = Class(self.session, row[2])
-        #    name_class = str(cur_class.get('class_number')) + cur_class.get('class_letter')
-        #    time_begin = row[5].strftime('%H:%M')
-        #    dt = datetime.datetime.combine(datetime.date.today(), row[5]) + row[6]
-        #    print(str(num) + '.', name_sub + ',', name_class, time_begin, '-', dt.time().strftime('%H:%M'))
-        #    num += 1
         for row in result2:
             subject_name = row[0]
             time_begin = row[1].strftime('%H:%M')
@@ -294,24 +257,6 @@ class TeacherInteract:
             return
         option = int(option)
         student_id = result[option - 1][0]
-        # print('Список учеников', name_class, 'класса')
-        # print_result(result)
-        # student_id = input('Введите id ученика ')
-        '''
-        try:
-            student_id = int(student_id)
-        except ValueError:
-            print_wrong_format('Ожидалось число')
-            return
-        flag = 0
-        for el in result:
-            if el[0] == student_id:
-                flag = 1
-                break
-        if flag == 0:
-            print_wrong_format('Неверный id')
-            return
-        '''
         mark_value = input('Введите оценку от 2 до 5 ')
         try:
             mark_value = int(mark_value)
@@ -386,7 +331,6 @@ class TeacherInteract:
                 self.db_execute(
                     s
                 )
-                # print(s)
             result = self.fetchall()
             if len(result) == 0:
                 if option == '1':
@@ -394,7 +338,6 @@ class TeacherInteract:
                 else:
                     print('Нет оценок за выбранный период')
                 continue
-            # print('opa13')
             student_id_to_names = self.get_student_id_to_names(self.my_class_id)
             if table == 'students':
                 cur_student = Student(self.session, id_val)
@@ -404,15 +347,12 @@ class TeacherInteract:
                 for i in range(len(result)):
                     if result[i][4] != cur_subject_id:
                         cur_subject_id = result[i][4]
-                        #cur_subject = Subject(self.session, result[i][4])
-                        #print('\n' + cur_subject.get('name') + ':')
                         print('\n' + self.subject_id_to_name[cur_subject_id] + ':')
                     print(result[i][5].date().isoformat(), result[i][5].time().strftime('%H:%M'), 'Оценка:',
                           result[i][1])
             elif table == 'subjects':
                 cur_subject = Subject(self.session, id_val)
                 print('Оценки по предмету ' + cur_subject.get('name') + ':')
-                # print('opa14')
                 cnt = 0
                 cur_student_id = -1
                 for i in range(len(result)):
@@ -421,9 +361,6 @@ class TeacherInteract:
                     cnt += 1
                     if result[i][3] != cur_student_id:
                         cur_student_id = result[i][3]
-                        #cur_student = Student(self.session, cur_student_id)
-                        #print('\n' + cur_student.get('name_last'), cur_student.get('name_first'),
-                         #     cur_student.get('name_middle') + ':')
                         print('\n' + student_id_to_names[cur_student_id][0], student_id_to_names[cur_student_id][1],
                               student_id_to_names[cur_student_id][2])
                     print(result[i][5].date().isoformat(), result[i][5].time().strftime('%H:%M'), 'Оценка:',
@@ -443,11 +380,9 @@ class TeacherInteract:
         return res
 
     def show_marks_for_subject(self):
-        # subject_id = self.read_id('предмета')
         subject_id = self.choose_subject()
         if subject_id == -1:
             return
-        # print('opa12')
         self.show_marks('subjects', 'subject_id', subject_id)
 
     def choose_student(self):
@@ -489,7 +424,6 @@ class TeacherInteract:
 
     def show_marks_of_student(self):
         student_id = self.choose_student()
-        # student_id = self.read_id('ученика')
         if student_id == -1:
             return
         self.show_marks('students', 'student_id', student_id)
@@ -504,15 +438,12 @@ class TeacherInteract:
                 print('Ожидалось число')
                 print(Color.RESET, end='')
                 return -1
-            # print('opa11')
             if obj == 'ученика':
-                # print('opa10')
                 self.db_execute(
                     'SELECT class_id FROM students WHERE student_id = %s',
                     obj_id
                 )
             elif obj == 'предмета':
-                # print('opa9')
                 self.db_execute(
                     'SELECT subject_id FROM subjects WHERE subject_id = %s',
                     obj_id
@@ -635,7 +566,7 @@ class TeacherInteract:
     def set_class_id_to_str(self):
         res = dict()
         self.db_execute(
-            'select * from classes;'
+            'SELECT * FROM classes;'
         )
         result = self.fetchall()
         for el in result:
@@ -645,7 +576,7 @@ class TeacherInteract:
     def get_class_id_to_pair(self):
         res = dict()
         self.db_execute(
-            'select * from classes;'
+            'SELECT * FROM classes;'
         )
         result = self.fetchall()
         for el in result:
@@ -655,7 +586,7 @@ class TeacherInteract:
     def get_subject_id_to_name(self):
         res = dict()
         self.db_execute(
-            'select * from subjects;'
+            'SELECT * FROM subjects;'
         )
         result = self.fetchall()
         for el in result:
@@ -694,8 +625,3 @@ def print_result(lst):
             else:
                 print(row[i], end=' ')
         print()
-
-
-# сделать больше оценок
-# сделать меньше учеников в классе
-# сделать меньше уроков (либо добавить учителей, которые не класснухи, но ведут уроки [ето вроде лучше])
