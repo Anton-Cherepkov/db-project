@@ -32,8 +32,7 @@ class TeacherInteract:
         self.class_id_to_str = self.set_class_id_to_str()
         self.class_id_to_pair = self.get_class_id_to_pair()
         self.subject_id_to_name = self.get_subject_id_to_name()
-        self.list_days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота',
-                          'Вся неделя']
+        self.list_days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота', 'Вся неделя']
 
     def handler_menu_teacher(self):
         assert self.session.user_role == Role.TEACHER, 'Role check failed'
