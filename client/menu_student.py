@@ -152,8 +152,9 @@ def menu_my_marks(session):
     end_date += ' 23:59:59'
 
     session.db_execute(
-        'SELECT value, teacher_id, time '
+        'SELECT value, name_last, name_first, name_middle, time '
         'FROM marks '
+        'INNER JOIN teachers USING (teacher_id) '
         'WHERE student_id = %s AND subject_id = %s AND time BETWEEN %s AND %s '
         'ORDER BY time;',
         session.student_id, subjects[option][0], begin_date, end_date
@@ -162,12 +163,11 @@ def menu_my_marks(session):
     if not result:
         print('Оценки за указанный период не найдены')
     for row in result:
-        teacher = Teacher(session, int(row[1]))
-        teacher_name_middle = teacher.get(Teacher.name_middle)
+        teacher_name_middle = row[3]
 
         print('Оценка:', str(row[0]))
-        print('Дата:', row[2].date().isoformat(), row[2].time().strftime('%H:%M'))
-        print('Учитель:', teacher.get(Teacher.name_last), teacher.get(Teacher.name_first), end=' ')
+        print('Дата:', row[4].date().isoformat(), row[4].time().strftime('%H:%M'))
+        print('Учитель:', row[1], row[2], end=' ')
         if teacher_name_middle:
             print(teacher_name_middle, end='')
         print('\n')
