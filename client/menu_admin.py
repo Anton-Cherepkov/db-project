@@ -2,12 +2,15 @@ from session import Session, Role
 from entry_student import Student
 from entry_teacher import Teacher
 from entry_class import Class
+from entry_subject import Subject
 
 import psycopg2
 import psycopg2.extensions
 
+import datetime
+
 from colors import Color
-from utils import encrypt_password
+from utils import encrypt_password, print_wrong_format
 
 
 def menu_admin(session):
@@ -19,7 +22,7 @@ def menu_admin(session):
         print('1. Управление учениками')
         print('2. Управление учителями')
         print('3. Управление классами')
-        # TODO: print('4. Управление расписанием')
+        print('4. Управление расписанием')
         print('0. Выход')
         print(Color.RESET, end='')
 
@@ -35,6 +38,229 @@ def menu_admin(session):
             menu_control_teachers(session)
         elif option is '3':
             menu_control_classes(session)
+        elif option is '4':
+            menu_control_schedule(session)
+
+
+def get_nums(cnt):
+    res = []
+    for i in range(cnt):
+        res.append(str(i + 1))
+    res.append('0')
+    return res
+
+
+def menu_control_schedule(session):
+    print(Color.BLUE, end='')
+    print('### Управление расписанием ###')
+    print('1. Добавить урок')
+    print('2. Удалить урок')
+    print('0. Выход')
+    print(Color.RESET, end='')
+    option = None
+    while option not in ('0', '1', '2'):
+        option = input('? ')
+    if option is '0':
+        return
+    if option is '1':
+        add_schedule(session)
+    elif option is '2':
+        delete_schedule(session)
+
+
+def get_str_class(session, class_id):
+    session.db_execute(
+        'SELECT * FROM classes WHERE class_id = %s',
+        class_id
+    )
+    res = session.cursor.fetchall()
+    return str(res[0][1]) + res[0][2]
+
+
+def get_sub_id_to_name(session):
+    session.db_execute(
+        'SELECT * FROM subjects;'
+    )
+    res = dict()
+    result = session.cursor.fetchall()
+    for el in result:
+        res[el[0]] = el[1]
+    return res
+
+
+def get_teacher_id_to_name(session):
+    session.db_execute(
+        'SELECT * FROM teachers;'
+    )
+    res = dict()
+    result = session.cursor.fetchall()
+    for el in result:
+        res[el[0]] = el[3] + ' ' + el[1] + ' '
+        if el[2] is not None:
+            res[el[0]] = res[el[0]] + el[2]
+    return res
+
+
+def delete_schedule(session):
+    list_days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота',
+                 'Вся неделя']
+
+    day_and_class = get_day_and_class(session)
+    if day_and_class == -1:
+        return
+
+    day, class_id = day_and_class[0], day_and_class[1]
+
+    session.db_execute(
+        'SELECT * FROM schedule WHERE day = %s AND class_id = %s;',
+        day, class_id
+    )
+    result = session.cursor.fetchall()
+    if len(result) == 0:
+        print('В {0} у {1} класса нет уроков'.format(list_days[day], get_str_class(session, class_id)))
+        return
+    print('{0}, {1} класс'.format(list_days[day], get_str_class(session, class_id)))
+    print('Выберите урок:')
+    sub_id_to_name = get_sub_id_to_name(session)
+    teacher_id_to_name = get_teacher_id_to_name(session)
+    for i in range(len(result)):
+        day = day
+        time_begin = result[i][5].strftime('%H:%M')
+        time_end = (datetime.datetime.combine(datetime.date.today(), result[i][5]) + result[i][6]).strftime('%H:%M')
+        print(str(i + 1) + '.', sub_id_to_name[result[i][1]] + ',', teacher_id_to_name[result[i][3]] + ',', time_begin, '-', time_end)
+
+    print('0. Назад')
+    nums = get_nums(len(result))
+    option = None
+    while option not in nums:
+        option = input('? ')
+    if option is '0':
+        return -1
+    session.connection.set_isolation_level(0)
+    session.db_execute(
+        'DELETE FROM schedule WHERE schedule_id = %s',
+        result[int(option) - 1][0]
+    )
+    print('Урок удален')
+
+
+def get_day_and_class(session):
+    list_days = ['Воскресенье', 'Понедельник', 'Вторник', 'Среда', 'Четверг', 'Пятница', 'Суббота',
+                 'Вся неделя']
+
+    print('Выберите день:')
+    for i in range(len(list_days) - 1):
+        print(str(i + 1) + '.', list_days[i])
+    print('0. Назад')
+    nums = get_nums(len(list_days) - 1)
+    option = None
+    while option not in nums:
+        option = input('? ')
+    if option is '0':
+        return -1
+    day = int(option) - 1
+
+    session.db_execute(
+        'SELECT * FROM classes;'
+    )
+    list_classes = session.cursor.fetchall()
+    print('Выберите класс:')
+    for i in range(len(list_classes) - 1):
+        print(str(i + 1) + '.', str(list_classes[i][1]) + list_classes[i][2])
+    print('0. Назад')
+    nums = get_nums(len(list_classes))
+    option = None
+    while option not in nums:
+        option = input('? ')
+    if option is '0':
+        return -1
+    class_id = list_classes[int(option) - 1][0]
+
+    return day, class_id
+
+
+def add_schedule(session):
+    day_and_class = get_day_and_class(session)
+    if day_and_class == -1:
+        return
+
+    day, class_id = day_and_class[0], day_and_class[1]
+
+    session.db_execute(
+        'SELECT * FROM subjects;'
+    )
+    list_subs = session.cursor.fetchall()
+    print('Выберите предмет:')
+    for i in range(len(list_subs) - 1):
+        print(str(i + 1) + '.', list_subs[i][1])
+    print('0. Назад')
+    nums = get_nums(len(list_subs))
+    option = None
+    while option not in nums:
+        option = input('? ')
+    if option is '0':
+        return
+    subject_id = list_subs[int(option) - 1][0]
+
+    session.db_execute(
+        'SELECT * FROM teachers;'
+    )
+    list_teachers = session.cursor.fetchall()
+    print('Выберите учителя:')
+    for i in range(len(list_teachers) - 1):
+        print(str(i + 1) + '.', list_teachers[i][3], list_teachers[i][1], list_teachers[i][2])
+    print('0. Назад')
+    nums = get_nums(len(list_teachers))
+    option = None
+    while option not in nums:
+        option = input('? ')
+    if option is '0':
+        return
+    teacher_id = list_teachers[int(option) - 1][0]
+
+    hours = input('Введите час начала (от 9 до 20) ')
+    try:
+        hours = int(hours)
+    except ValueError:
+        print_wrong_format('Ожидалось число')
+        return
+    if hours < 9 or hours > 20:
+        print_wrong_format('Неверное значение')
+        return
+    minutes = input('Введите минуту начала (от 0 до 59) ')
+    try:
+        minutes = int(minutes)
+    except ValueError:
+        print_wrong_format('Ожидалось число')
+        return
+    if minutes < 0 or hours > 59:
+        print_wrong_format('Неверное значение')
+        return
+
+    hours = str(hours)
+    if int(hours) < 10:
+        hours = '0' + hours
+    minutes = str(minutes)
+    if int(minutes) < 10:
+        minutes = '0' + minutes
+    s = "SELECT * FROM schedule WHERE subject_id = {0} AND class_id = {1} AND teacher_id = {2} AND day = {3} AND time_begin = '{4}'".format(
+        subject_id, class_id, teacher_id, day, hours + ':' + minutes + ':00'
+    )
+    session.db_execute(
+        s
+    )
+    res = session.cursor.fetchall()
+    session.connection.set_isolation_level(0)
+    if len(res) != 0:
+        print('В это время уже есть урок')
+        return
+    s = "INSERT INTO schedule (subject_id, class_id, teacher_id, day, time_begin, time_duration) VALUES " \
+        "({0}, {1}, {2}, {3}, '{4}', '40 mins') RETURNING schedule_id".format(subject_id, class_id, teacher_id, day, hours + ':' + minutes + ':00')
+    session.db_execute(
+        s
+    )
+    res = session.cursor.fetchall()
+    print('урок добавлен [id:', str(res[0][0]) + ']')
 
 
 def menu_control_students(session):
